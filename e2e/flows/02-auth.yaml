@@ -4,6 +4,7 @@ appId: com.ronybrand.estados
 ---
 - launchApp:
     clearState: true
+- runFlow: helpers/dismiss-system-dialogs.yaml
 # A protected screen without a session lands on the login screen
 - tapOn: 'New state'
 - assertVisible: 'Login'

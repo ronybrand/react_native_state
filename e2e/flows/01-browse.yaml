@@ -3,6 +3,7 @@ appId: com.ronybrand.estados
 ---
 - launchApp:
     clearState: true
+- runFlow: helpers/dismiss-system-dialogs.yaml
 - assertVisible: 'Brazilian States'
 - assertVisible: 'São Paulo'
 - assertVisible: 'Rio de Janeiro'

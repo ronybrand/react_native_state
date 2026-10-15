@@ -3,6 +3,7 @@ appId: com.ronybrand.estados
 ---
 - launchApp:
     clearState: true
+- runFlow: helpers/dismiss-system-dialogs.yaml
 - runFlow: helpers/login.yaml
 # Create
 - tapOn: 'New state'

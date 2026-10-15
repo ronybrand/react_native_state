@@ -19,6 +19,13 @@ trap 'kill "$MOCK_PID" 2>/dev/null || true' EXIT
 adb reverse "tcp:$PORT" "tcp:$PORT"
 adb install -r "$APK"
 
+# A CI emulator is slow: keep the system from putting "isn't responding" dialogs over the
+# app, close any that is already up, and give the launcher a moment to settle.
+adb shell settings put global hide_error_dialogs 1
+adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS > /dev/null || true
+adb shell input keyevent KEYCODE_HOME
+sleep 20
+
 for _ in $(seq 1 20); do
   curl -fsS -o /dev/null "http://localhost:$PORT/actuator/info" && break
   sleep 0.5
