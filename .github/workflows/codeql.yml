@@ -10,6 +10,10 @@ on:
 jobs:
   analyze:
     runs-on: ubuntu-latest
+    # A Dependabot pull request gets a read-only token and no access to secrets, so
+    # CodeQL cannot upload its results there and the job fails for a reason that has
+    # nothing to do with the change. The bump is still analyzed once it lands on main.
+    if: github.actor != 'dependabot[bot]'
     permissions:
       # Listing permissions drops the defaults, so a private repository also
       # needs contents: read (checkout) and actions: read (CodeQL's run lookup).
