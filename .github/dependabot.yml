@@ -38,6 +38,9 @@ updates:
       # Re-evaluate when it does.
       - dependency-name: 'eslint'
         update-types: ['version-update:semver-major']
+      # eslint-config-expo is versioned with the Expo SDK too (57.x for SDK 57): the 58 bump
+      # belongs to an SDK upgrade, and fails lint on its own.
+      - dependency-name: 'eslint-config-expo'
 
   - package-ecosystem: github-actions
     directory: /
