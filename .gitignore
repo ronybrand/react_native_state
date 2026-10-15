@@ -39,3 +39,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Tests and coverage
+coverage/
+
+# Local env files (EXPO_PUBLIC_* values are inlined into the bundle, never put secrets there)
+.env*.local
