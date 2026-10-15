@@ -18,6 +18,7 @@ interface RetryConfig extends AxiosRequestConfig {
 // has no origin for a relative '/api' to resolve against.
 const baseURL = getApiBaseUrl();
 
+// eslint-disable-next-line import/no-named-as-default-member -- `axios.create` is the documented API
 export const httpClient = axios.create({
   baseURL,
   timeout: TIMEOUT_MS,

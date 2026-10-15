@@ -1,13 +1,14 @@
 // Picked up automatically for every spec (a root-level mock of a node module).
 // Real navigation needs a native navigator, so specs assert on `router` calls
 // instead - the same observable contract the screens have with Expo Router.
-import { Pressable, Text } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import type { ReactNode } from 'react';
 
 export const router = {
   push: jest.fn(),
   replace: jest.fn(),
   back: jest.fn(),
+  canGoBack: jest.fn(() => true),
 };
 
 export const useRouter = () => router;
@@ -17,6 +18,8 @@ export function __resetRouter() {
   router.push.mockClear();
   router.replace.mockClear();
   router.back.mockClear();
+  router.canGoBack.mockReset();
+  router.canGoBack.mockReturnValue(true);
   useLocalSearchParams.mockReset();
   useLocalSearchParams.mockReturnValue({});
 }
@@ -47,7 +50,7 @@ export function Slot() {
 }
 
 function StackComponent({ children }: { children?: ReactNode }) {
-  return <>{children}</>;
+  return <View testID="stack">{children}</View>;
 }
 StackComponent.Screen = function Screen(_props: { name?: string; options?: unknown }) {
   return null;

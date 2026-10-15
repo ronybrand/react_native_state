@@ -3,6 +3,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react-native';
 import { AuthContext, type AuthContextValue } from '@/auth/AuthProvider';
 
+// The root-level expo-router mock (__mocks__/expo-router.tsx) carries test-only
+// helpers the real module's types do not know about.
+export function resetRouter(): void {
+  (jest.requireMock('expo-router') as { __resetRouter: () => void }).__resetRouter();
+}
+
 export function createQueryClient() {
   return new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },

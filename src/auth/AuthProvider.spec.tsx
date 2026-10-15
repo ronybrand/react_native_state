@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Text } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 import MockAdapter from 'axios-mock-adapter';
 import { act, render, screen, waitFor } from '@testing-library/react-native';
 import { AuthProvider, useAuth } from './AuthProvider';
@@ -60,7 +61,6 @@ describe('AuthProvider', () => {
     await saveToken(token);
     // Simulate a cold start: memory is empty, only the keychain has it.
     await clearToken();
-    const SecureStore = require('expo-secure-store');
     await SecureStore.setItemAsync('estado_jwt', token);
 
     await renderProvider();
@@ -69,7 +69,6 @@ describe('AuthProvider', () => {
   });
 
   it('treats an expired stored token as logged out', async () => {
-    const SecureStore = require('expo-secure-store');
     await SecureStore.setItemAsync('estado_jwt', jwt(-60));
 
     await renderProvider();
