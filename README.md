@@ -134,6 +134,54 @@ npx expo export --platform android   # does it actually bundle with Metro?
 Husky + lint-staged run `eslint --fix` and `prettier --write` on pre-commit. CI runs lint, types,
 tests with coverage, a Metro export for both platforms and `expo-doctor`.
 
+## Branding
+
+The icon is a map pin on the brand green, the same as the Flutter app. Everything is configured in
+`app.json`, and `expo prebuild` / EAS Build turn it into the native files:
+
+- `assets/icon.png`: full-bleed, opaque (the App Store rejects an icon with an alpha channel).
+- `assets/android-icon-foreground.png` and `android-icon-monochrome.png`: the adaptive icon (over
+  `android.adaptiveIcon.backgroundColor`) and the Android 13 themed icon. Expo does not inset the
+  foreground, so the pin is drawn inside the central 66% that every launcher mask keeps visible.
+- `assets/splash-icon.png`: drawn by the `expo-splash-screen` plugin over the brand colour (width 200).
+  It is also what the user sees while the root layout reads the session from the keychain.
+- `assets/favicon.png`: the web favicon.
+
+## Release (EAS Build)
+
+Unlike a hand-rolled Gradle setup, Expo apps are signed by **EAS**: it generates the Android keystore
+the first time and stores it, so there is no key file in this repository and nothing to wire into
+Gradle. `eas.json` defines two profiles:
+
+| Profile      | Output                 | Use                                                      |
+| ------------ | ---------------------- | -------------------------------------------------------- |
+| `preview`    | an installable `.apk`  | try the app on a device, internal distribution           |
+| `production` | an `.aab` (app bundle) | upload to Google Play; the `versionCode` auto-increments |
+
+```bash
+npm install -g eas-cli           # or: npx eas-cli@latest <command>
+eas login                        # an Expo account
+eas build:configure              # once: links the project (writes extra.eas.projectId to app.json)
+eas build --platform android --profile preview       # an APK to install
+eas build --platform android --profile production    # the bundle for Google Play
+eas submit --platform android --profile production   # to the internal testing track
+```
+
+Things worth knowing:
+
+- **The upload key.** EAS holds the keystore; to keep your own copy run `eas credentials`, pick
+  Android and download it to `credentials.json`. Never commit it. With **Google Play App Signing**
+  (the default for new apps) Google holds the real signing key and yours is only an upload key, which
+  Google support can reset if it is ever lost.
+- **Build numbers.** `cli.appVersionSource` is `remote` and `production` has `autoIncrement`, so EAS
+  stores and bumps the `versionCode` (Google Play rejects a number it has already seen). If the app was
+  already published, set the last one with `eas build:version:set` before the first build.
+- **iOS** needs a paid Apple Developer account; EAS can create and manage the certificate and the
+  provisioning profile (`eas build --platform ios`) without a Mac. The bundle id is
+  `com.ronybrand.estados`.
+- The `development` profile that `eas build:configure` normally adds is left out on purpose: it needs
+  `expo-dev-client`, which this app does not use.
+
 ## Development process
 
 Built test-first (red, green, refactor): the specs for each layer were written and run failing
@@ -145,8 +193,9 @@ guard redirect, login, validation). That is not a device run.
 
 - **Device e2e** (Maestro or Detox) and a run on a physical device or emulator: everything above
   was verified through Jest, Metro bundles and react-native-web, not on hardware.
-- **EAS build/submit and store assets**: the bundle identifiers (`com.ronybrand.estados`), icons and
-  splash are the template's.
+- **A first EAS build and submit**: `eas.json` is in place and follows the documented schema, but it was
+  not run (it needs your Expo account). Store listing assets (screenshots, description, privacy
+  policy) are yours to write.
 - **Dependabot does not bump the Expo-pinned packages** (`expo*`, `react`, `react-native*`,
   `typescript`): they only move together with an SDK upgrade (`npx expo install expo@latest`,
   then `npx expo install --fix`).
