@@ -36,8 +36,10 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - uses: gradle/actions/setup-gradle@v4
-      - run: npm ci
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.4
+      # Nothing in this job needs a dependency's install script (the native build is Gradle's),
+      # so none is allowed to run.
+      - run: npm ci --ignore-scripts
 
       - name: Generate the native Android project
         run: npx expo prebuild --platform android --no-install
@@ -47,10 +49,20 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
 
+      # Pinned to a release and checked against the project's published checksum
+      # (checksums_sha256.txt of cli-2.11.0), instead of piping an installer into a shell.
       - name: Install Maestro
+        env:
+          MAESTRO_VERSION: cli-2.11.0
+          MAESTRO_SHA256: 5384593cb4e7a106489e75a821d157dd43f4e438df6bc308b72e82c685e1283a
         run: |
-          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          curl --proto '=https' --tlsv1.2 -fsSL -o "$RUNNER_TEMP/maestro.zip"             "https://github.com/mobile-dev-inc/maestro/releases/download/${MAESTRO_VERSION}/maestro.zip"
+          echo "${MAESTRO_SHA256}  ${RUNNER_TEMP}/maestro.zip" | sha256sum --check --strict -
+          unzip -q "$RUNNER_TEMP/maestro.zip" -d "$RUNNER_TEMP/maestro-unpacked"
+          mkdir -p "$HOME/.maestro"
+          cp -r "$RUNNER_TEMP/maestro-unpacked/maestro/." "$HOME/.maestro/"
           echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+          "$HOME/.maestro/bin/maestro" --version
 
       - name: Enable KVM (hardware acceleration for the emulator)
         run: |
@@ -59,7 +71,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Run the flows on an emulator
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 34
           arch: x86_64
