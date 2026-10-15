@@ -60,20 +60,11 @@ jobs:
       - name: Generate the native Android project
         run: npx expo prebuild --platform android --no-install
 
-      # The native toolchain is not on the runner image: Gradle downloads and installs the NDK
-      # and CMake it needs (about a minute and a half) on every run. They only change with the
-      # React Native version, i.e. with the lockfile.
-      - name: Cache the NDK and CMake
-        uses: actions/cache@v4
-        with:
-          path: |
-            /usr/local/lib/android/sdk/ndk
-            /usr/local/lib/android/sdk/cmake
-          key: android-ndk-cmake-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          restore-keys: android-ndk-cmake-${{ runner.os }}-
-
       # x86_64 only, because that is what the emulator runs. Lint-vital is skipped (see the init
-      # script) and the Gradle build cache is on, so compiled native code is reused across runs.
+      # script) and the Gradle build cache is on: once `main` has run this workflow and saved
+      # the cache, a pull request reuses the compiled native code (the biggest part of the build).
+      # (Caching the NDK and CMake was tried and dropped: restoring them cost about as much as
+      # Gradle's own download and install, and the cache is over a gigabyte.)
       - name: Build the release APK
         working-directory: android
         run: >-
