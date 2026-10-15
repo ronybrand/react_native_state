@@ -182,6 +182,35 @@ Things worth knowing:
 - The `development` profile that `eas build:configure` normally adds is left out on purpose: it needs
   `expo-dev-client`, which this app does not use.
 
+## End-to-end tests (Maestro)
+
+Jest mocks the keychain, the router and the native alert, so it cannot say whether those work on a
+device. The flows in `e2e/flows` drive the **real screens** of a release build on an Android emulator
+with [Maestro](https://docs.maestro.dev/), against a small mock of the backend:
+
+| Flow        | What it proves                                                                                                                             |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `01-browse` | the public list, the footer (backend build) and the debounced search                                                                       |
+| `02-auth`   | the guard, a wrong password, a real login, and the session **surviving an app restart** (read back from the Android Keystore), then logout |
+| `03-crud`   | create, edit and delete (through the native alert, including Cancel keeping the row)                                                       |
+
+- `e2e/mock-api/server.js` is a zero-dependency Node server with the same routes, envelope and status
+  codes the app uses and its state in memory, so a flow can write freely. It has its own Jest spec,
+  and `POST /__reset` restores the seed data between flows.
+- The `E2E (Android)` workflow builds the APK (`expo prebuild` + Gradle), starts an emulator and runs
+  `e2e/run-flows.sh`. `app.config.ts` adds `usesCleartextTraffic` **only when `E2E=1`**, so the mock can
+  be reached over plain http while the shipped app keeps blocking cleartext.
+- Locally, with an emulator or device attached and Maestro installed:
+
+```bash
+E2E=1 EXPO_PUBLIC_API_URL=http://localhost:4010 npx expo prebuild --platform android --no-install
+(cd android && ./gradlew assembleRelease -PreactNativeArchitectures=x86_64)
+bash e2e/run-flows.sh
+```
+
+Expo inlines `EXPO_PUBLIC_*` at bundle time and caches transformed files, so after changing it, build
+with a clean cache (`npx expo export --clear`, or a fresh checkout as in CI).
+
 ## Development process
 
 Built test-first (red, green, refactor): the specs for each layer were written and run failing
@@ -191,14 +220,15 @@ guard redirect, login, validation). That is not a device run.
 
 ## Not done yet
 
-- **Device e2e** (Maestro or Detox) and a run on a physical device or emulator: everything above
-  was verified through Jest, Metro bundles and react-native-web, not on hardware.
+- **A run on a physical device or an iOS simulator.** The Android flows run in CI on an emulator; nothing
+  here has run on an iPhone.
 - **A first EAS build and submit**: `eas.json` is in place and follows the documented schema, but it was
   not run (it needs your Expo account). Store listing assets (screenshots, description, privacy
   policy) are yours to write.
-- **Dependabot does not bump the Expo-pinned packages** (`expo*`, `react`, `react-native*`,
-  `typescript`): they only move together with an SDK upgrade (`npx expo install expo@latest`,
-  then `npx expo install --fix`).
+- **Dependabot does not bump the Expo-pinned packages** (`expo*`, `react`, `react-native*`, `jest`,
+  `jest-expo`, `typescript`) nor ESLint 10 (`eslint-config-expo` does not support it yet): the first
+  group only moves together with an SDK upgrade (`npx expo install expo@latest`, then
+  `npx expo install --fix`).
 
 ## Security
 

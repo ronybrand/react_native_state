@@ -11,6 +11,12 @@ async function fill(abbreviation: string, name: string) {
 }
 
 describe('StateForm', () => {
+  it('exposes stable test ids on the fields, for the end-to-end flows', async () => {
+    await render(<StateForm onSubmitState={jest.fn()} />);
+    expect(screen.getByTestId('state-abbreviation')).toBe(screen.getByLabelText('Abbreviation'));
+    expect(screen.getByTestId('state-name')).toBe(screen.getByLabelText('Name'));
+  });
+
   it('keeps Save disabled while the form is invalid', async () => {
     await render(<StateForm onSubmitState={jest.fn()} />);
     expect(save()).toBeDisabled();

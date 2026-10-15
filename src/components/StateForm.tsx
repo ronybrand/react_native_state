@@ -48,6 +48,7 @@ export function StateForm({
         render={({ field }) => (
           <TextField
             label="Abbreviation"
+            testID="state-abbreviation"
             value={field.value}
             onChangeText={(text) => field.onChange(text.toUpperCase())}
             onBlur={field.onBlur}
@@ -64,6 +65,7 @@ export function StateForm({
         render={({ field }) => (
           <TextField
             label="Name"
+            testID="state-name"
             value={field.value}
             onChangeText={field.onChange}
             onBlur={field.onBlur}

@@ -15,6 +15,12 @@ const logIn = () => screen.getByRole('button', { name: 'Log in' });
 describe('LoginScreen', () => {
   beforeEach(() => resetRouter());
 
+  it('exposes stable test ids on the fields, for the end-to-end flows', async () => {
+    await renderWithProviders(<LoginScreen />);
+    expect(screen.getByTestId('login-username')).toBe(screen.getByLabelText('Username'));
+    expect(screen.getByTestId('login-password')).toBe(screen.getByLabelText('Password'));
+  });
+
   it('keeps Log in disabled until both fields are filled', async () => {
     const user = userEvent.setup();
     await renderWithProviders(<LoginScreen />);

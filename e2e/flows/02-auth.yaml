@@ -1,0 +1,34 @@
+# The guard, a wrong password, a real login, and the session surviving a restart
+# (it lives in the Android Keystore, so clearing the app's state is what logs out).
+appId: com.ronybrand.estados
+---
+- launchApp:
+    clearState: true
+# A protected screen without a session lands on the login screen
+- tapOn: 'New state'
+- assertVisible: 'Login'
+- tapOn:
+    id: 'login-username'
+- inputText: 'admin'
+- tapOn:
+    id: 'login-password'
+- inputText: 'wrong-password'
+- hideKeyboard
+- tapOn: 'Log in'
+- assertVisible: 'Invalid username or password.'
+# Fix the password and sign in
+- tapOn:
+    id: 'login-password'
+- eraseText: 50
+- inputText: 'e2e-password'
+- hideKeyboard
+- tapOn: 'Log in'
+- assertVisible: 'Log out'
+# Restart the app: the token is read back from the keystore, no login needed
+- launchApp
+- assertVisible: 'Log out'
+# Log out, restart: still logged out (the token was deleted, not just hidden)
+- tapOn: 'Log out'
+- assertVisible: 'Log in'
+- launchApp
+- assertVisible: 'Log in'
