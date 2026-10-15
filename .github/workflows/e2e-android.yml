@@ -3,10 +3,23 @@ name: E2E (Android)
 # Builds a release APK against the local mock API, installs it on an emulator and drives
 # the real screens with Maestro. Jest cannot do this: it mocks the keychain, the router
 # and the native alert, which are exactly what these flows exercise.
+# A change that only touches docs cannot affect the app, so it should not spend ~15 minutes
+# of emulator time. (If this check ever becomes required, a skipped workflow would block
+# merging; revisit then.)
 on:
   pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.github/dependabot.yml'
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.github/dependabot.yml'
   workflow_dispatch:
 
 permissions:
@@ -36,6 +49,9 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      # Caches ~/.gradle (dependencies, wrapper and the build cache that holds compiled native
+      # code). It only WRITES from the default branch: a pull request reads what `main` saved,
+      # so the first run on `main` after merging is what makes every later run fast.
       - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.4
       # Nothing in this job needs a dependency's install script (the native build is Gradle's),
       # so none is allowed to run.
@@ -44,10 +60,27 @@ jobs:
       - name: Generate the native Android project
         run: npx expo prebuild --platform android --no-install
 
-      # x86_64 only, because that is what the emulator runs.
+      # The native toolchain is not on the runner image: Gradle downloads and installs the NDK
+      # and CMake it needs (about a minute and a half) on every run. They only change with the
+      # React Native version, i.e. with the lockfile.
+      - name: Cache the NDK and CMake
+        uses: actions/cache@v4
+        with:
+          path: |
+            /usr/local/lib/android/sdk/ndk
+            /usr/local/lib/android/sdk/cmake
+          key: android-ndk-cmake-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: android-ndk-cmake-${{ runner.os }}-
+
+      # x86_64 only, because that is what the emulator runs. Lint-vital is skipped (see the init
+      # script) and the Gradle build cache is on, so compiled native code is reused across runs.
       - name: Build the release APK
         working-directory: android
-        run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
+        run: >-
+          ./gradlew assembleRelease
+          -PreactNativeArchitectures=x86_64
+          -I ../e2e/gradle/skip-lint-vital.gradle
+          --build-cache --parallel --no-daemon
 
       # Pinned to a release and checked against the project's published checksum
       # (checksums_sha256.txt of cli-2.11.0), instead of piping an installer into a shell.
@@ -70,6 +103,34 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # Creating the AVD and cold-booting it costs about a minute and a half. The first run saves
+      # a booted snapshot; later runs restore it. Both emulator steps must use the same hardware
+      # settings, or the snapshot would not match.
+      - name: Cache the emulator snapshot
+        id: avd-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ runner.os }}-api34-x86_64-pixel_6-v1
+
+      - name: Create the emulator snapshot (only when it is not cached)
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          force-avd-creation: false
+          cores: 4
+          ram-size: 4096M
+          heap-size: 1024M
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "Generated the AVD snapshot for caching."
+
       - name: Run the flows on an emulator
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
@@ -77,12 +138,14 @@ jobs:
           arch: x86_64
           target: google_apis
           profile: pixel_6
-          disable-animations: true
+          force-avd-creation: false
           # Software rendering is CPU-bound; more cores and memory keep the launcher responsive.
           cores: 4
           ram-size: 4096M
           heap-size: 1024M
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          # -no-snapshot-save: boot from the cached snapshot and do not rewrite it.
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot-save
+          disable-animations: true
           # One line: the action runs a multi-line script line by line.
           script: bash e2e/run-flows.sh
 
