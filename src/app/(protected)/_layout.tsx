@@ -21,8 +21,10 @@ export default function ProtectedLayout() {
 
   return (
     <Stack screenOptions={stackScreenOptions}>
-      <Stack.Screen name="state/new" options={{ title: 'New state' }} />
-      <Stack.Screen name="state/[id]/edit" options={{ title: 'Edit state' }} />
+      {/* Empty header title: each screen already renders its own heading, and
+          repeating it in the native header would show it twice. */}
+      <Stack.Screen name="state/new" options={{ title: '' }} />
+      <Stack.Screen name="state/[id]/edit" options={{ title: '' }} />
     </Stack>
   );
 }

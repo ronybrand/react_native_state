@@ -1,0 +1,42 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      # jest and jest-expo (and the testing library) are locked to each other.
+      testing:
+        patterns:
+          - 'jest*'
+          - '@types/jest'
+          - '@testing-library/*'
+          - 'test-renderer'
+      weekly-batch:
+        patterns:
+          - '*'
+    ignore:
+      # These are pinned by the Expo SDK: the supported versions are the ones
+      # `npx expo install --fix` resolves for the SDK in package.json. A
+      # Dependabot bump moves one of them out of the SDK's range and breaks the
+      # native build (expo-doctor flags it). They only move together, with an SDK
+      # upgrade done by hand (`npx expo install expo@latest`, then `--fix`).
+      - dependency-name: 'expo'
+      - dependency-name: 'expo-*'
+      - dependency-name: 'react'
+      - dependency-name: 'react-dom'
+      - dependency-name: 'react-native'
+      - dependency-name: 'react-native-*'
+      - dependency-name: '@types/react'
+      # Expo pins TypeScript (~6.0) and typescript-eslint's peer range is <6.1.
+      - dependency-name: 'typescript'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      weekly-batch:
+        patterns:
+          - '*'
