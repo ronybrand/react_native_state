@@ -1,8 +1,7 @@
 # Reading is public: the list, the footer and the search work without signing in.
 appId: com.ronybrand.estados
 ---
-- launchApp:
-    clearState: true
+- runFlow: helpers/launch-clean.yaml
 - runFlow: helpers/dismiss-system-dialogs.yaml
 - assertVisible: 'Brazilian States'
 - assertVisible: 'São Paulo'

@@ -2,8 +2,7 @@
 # (it lives in the Android Keystore, so clearing the app's state is what logs out).
 appId: com.ronybrand.estados
 ---
-- launchApp:
-    clearState: true
+- runFlow: helpers/launch-clean.yaml
 - runFlow: helpers/dismiss-system-dialogs.yaml
 # A protected screen without a session lands on the login screen
 - tapOn: 'New state'

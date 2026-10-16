@@ -1,8 +1,7 @@
 # Create, edit and delete a state through the real screens, against the mock API.
 appId: com.ronybrand.estados
 ---
-- launchApp:
-    clearState: true
+- runFlow: helpers/launch-clean.yaml
 - runFlow: helpers/dismiss-system-dialogs.yaml
 - runFlow: helpers/login.yaml
 # Create
