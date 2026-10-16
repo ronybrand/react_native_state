@@ -95,6 +95,7 @@ export default function StateListScreen() {
         <AppButton label="New state" variant="success" onPress={() => router.push('/state/new')} />
       </View>
       <TextInput
+        testID="state-search"
         accessibilityLabel="Search by name or abbreviation"
         placeholder="Search by name or abbreviation..."
         placeholderTextColor={colors.muted}

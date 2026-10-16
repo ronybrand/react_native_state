@@ -40,6 +40,7 @@ export default function LoginScreen() {
       <View style={styles.form}>
         <TextField
           label="Username"
+          testID="login-username"
           value={username}
           onChangeText={setUsername}
           autoCapitalize="none"
@@ -50,6 +51,7 @@ export default function LoginScreen() {
         />
         <TextField
           label="Password"
+          testID="login-password"
           value={password}
           onChangeText={setPassword}
           secureTextEntry

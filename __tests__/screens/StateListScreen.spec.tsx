@@ -34,6 +34,13 @@ describe('StateListScreen', () => {
 
   afterEach(() => alertSpy.mockRestore());
 
+  it('exposes a stable test id on the search box, for the end-to-end flows', async () => {
+    await renderWithProviders(<StateListScreen />);
+    expect(screen.getByTestId('state-search')).toBe(
+      screen.getByLabelText('Search by name or abbreviation'),
+    );
+  });
+
   it('shows a loading indicator, then the states', async () => {
     await renderWithProviders(<StateListScreen />);
     expect(screen.getByRole('progressbar')).toBeOnTheScreen();
