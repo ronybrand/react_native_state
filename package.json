@@ -74,6 +74,14 @@
       "!src/**/*.spec.{ts,tsx}",
       "!src/testUtils.tsx"
     ],
+    "coverageThreshold": {
+      "global": {
+        "statements": 90,
+        "branches": 85,
+        "functions": 90,
+        "lines": 90
+      }
+    },
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/e2e/"
