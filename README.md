@@ -43,6 +43,56 @@ the API contract are the same; the app itself follows mobile conventions instead
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    subgraph Device["Device (Expo)"]
+        direction LR
+        UI["Expo Router screens
+((protected) group guard)"]
+        Hooks["TanStack Query hooks
+(useStateQueries)"]
+        Auth["AuthProvider
+(loading | authenticated |
+unauthenticated)"]
+        Services["Services
+(state + mapper, auth, info)"]
+        Http["Axios httpClient
+(request id, timeout/retry, 401)"]
+        Tokens["tokenStorage
+(keychain + memory)"]
+        Secure[("expo-secure-store
+(Keychain / Keystore)")]
+    end
+
+    subgraph EC2["Backend (EC2)"]
+        direction LR
+        App["estado-app
+(Spring Boot)"]
+        DB[("Postgres")]
+    end
+
+    Lambda["start-api Lambda
+(opened in the browser)"]
+
+    UI --> Hooks
+    UI --> Auth
+    Hooks --> Services
+    Auth --> Services
+    Services --> Http
+    Http -- "HTTPS (EXPO_PUBLIC_API_URL)" --> App
+    App --> DB
+    Http --> Tokens
+    Auth --> Tokens
+    Tokens --> Secure
+    UI -. "API unreachable:
+Turn on the API" .-> Lambda
+    Lambda -. "starts the instance" .-> EC2
+```
+
+The app talks straight to the API: a native app has no origin, so there is no BFF proxy. The dashed
+path is the [Turn on the API](#when-the-api-is-turned-off) link, shown only when the API does not
+answer.
+
 ```
 src/
 ├── app/                      # Expo Router: every file is a screen
