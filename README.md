@@ -47,32 +47,22 @@ the API contract are the same; the app itself follows mobile conventions instead
 flowchart LR
     subgraph Device["Device (Expo)"]
         direction LR
-        UI["Expo Router screens
-((protected) group guard)"]
-        Hooks["TanStack Query hooks
-(useStateQueries)"]
-        Auth["AuthProvider
-(loading | authenticated |
-unauthenticated)"]
-        Services["Services
-(state + mapper, auth, info)"]
-        Http["Axios httpClient
-(request id, timeout/retry, 401)"]
-        Tokens["tokenStorage
-(keychain + memory)"]
-        Secure[("expo-secure-store
-(Keychain / Keystore)")]
+        UI["Expo Router screens\n((protected) group guard)"]
+        Hooks["TanStack Query hooks\n(useStateQueries)"]
+        Auth["AuthProvider\n(loading | authenticated |\nunauthenticated)"]
+        Services["Services\n(state + mapper, auth, info)"]
+        Http["Axios httpClient\n(request id, timeout/retry, 401)"]
+        Tokens["tokenStorage\n(keychain + memory)"]
+        Secure[("expo-secure-store\n(Keychain / Keystore)")]
     end
 
     subgraph EC2["Backend (EC2)"]
         direction LR
-        App["estado-app
-(Spring Boot)"]
+        App["estado-app\n(Spring Boot)"]
         DB[("Postgres")]
     end
 
-    Lambda["start-api Lambda
-(opened in the browser)"]
+    Lambda["start-api Lambda\n(opened in the browser)"]
 
     UI --> Hooks
     UI --> Auth
@@ -84,8 +74,7 @@ unauthenticated)"]
     Http --> Tokens
     Auth --> Tokens
     Tokens --> Secure
-    UI -. "API unreachable:
-Turn on the API" .-> Lambda
+    UI -. "API unreachable:\nTurn on the API" .-> Lambda
     Lambda -. "starts the instance" .-> EC2
 ```
 
