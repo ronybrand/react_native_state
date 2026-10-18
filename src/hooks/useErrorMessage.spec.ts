@@ -1,4 +1,5 @@
 import { act, renderHook } from '@testing-library/react-native';
+import { API_UNAVAILABLE_MESSAGE } from '@/lib/apiErrorMessage';
 import { useErrorMessage } from './useErrorMessage';
 
 describe('useErrorMessage', () => {
@@ -25,6 +26,19 @@ describe('useErrorMessage', () => {
       jest.advanceTimersByTime(4999);
     });
     expect(result.current.error).toBe('Boom');
+    await act(async () => {
+      jest.advanceTimersByTime(1);
+    });
+    expect(result.current.error).toBeNull();
+  });
+
+  it('keeps the API-unavailable message well past the default 5s', async () => {
+    const { result } = await renderHook(() => useErrorMessage());
+    await act(async () => result.current.setError(API_UNAVAILABLE_MESSAGE));
+    await act(async () => {
+      jest.advanceTimersByTime(59999);
+    });
+    expect(result.current.error).toBe(API_UNAVAILABLE_MESSAGE);
     await act(async () => {
       jest.advanceTimersByTime(1);
     });
