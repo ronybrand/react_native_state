@@ -12,6 +12,7 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { useDeleteState, useStates } from '@/hooks/useStateQueries';
 import { extractRequestId } from '@/lib/extractRequestId';
+import { apiErrorMessage } from '@/lib/apiErrorMessage';
 import type { State } from '@/interfaces/state';
 import { colors, spacing } from '@/theme/colors';
 
@@ -38,7 +39,7 @@ export default function StateListScreen() {
 
   useEffect(() => {
     if (isError) {
-      setError('Failed to fetch states.', extractRequestId(loadError));
+      setError(apiErrorMessage(loadError, 'Failed to fetch states.'), extractRequestId(loadError));
     }
   }, [isError, loadError, setError]);
 
@@ -73,7 +74,8 @@ export default function StateListScreen() {
           style: 'destructive',
           onPress: () =>
             deleteState.mutate(state.id, {
-              onError: (err) => setError('Failed to delete state.', extractRequestId(err)),
+              onError: (err) =>
+                setError(apiErrorMessage(err, 'Failed to delete state.'), extractRequestId(err)),
             }),
         },
       ]);

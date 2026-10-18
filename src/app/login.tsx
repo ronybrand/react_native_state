@@ -7,6 +7,7 @@ import { TextField } from '@/components/TextField';
 import { useAuth } from '@/auth/AuthProvider';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { extractRequestId } from '@/lib/extractRequestId';
+import { apiErrorMessage } from '@/lib/apiErrorMessage';
 import { colors, spacing } from '@/theme/colors';
 
 export default function LoginScreen() {
@@ -31,7 +32,7 @@ export default function LoginScreen() {
     } catch (err) {
       inFlight.current = false;
       setSubmitting(false);
-      setError('Invalid username or password.', extractRequestId(err));
+      setError(apiErrorMessage(err, 'Invalid username or password.'), extractRequestId(err));
     }
   }
 

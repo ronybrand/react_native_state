@@ -5,6 +5,7 @@ import { StateForm } from '@/components/StateForm';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { useCreateState, useStates } from '@/hooks/useStateQueries';
 import { extractRequestId } from '@/lib/extractRequestId';
+import { apiErrorMessage } from '@/lib/apiErrorMessage';
 import { closeScreen } from '@/lib/navigation';
 import type { NewState } from '@/interfaces/state';
 
@@ -17,7 +18,8 @@ export default function CreateStateScreen() {
   function handleSubmit(state: NewState) {
     createState.mutate(state, {
       onSuccess: () => closeScreen(router),
-      onError: (err) => setError('Failed to create state.', extractRequestId(err)),
+      onError: (err) =>
+        setError(apiErrorMessage(err, 'Failed to create state.'), extractRequestId(err)),
     });
   }
 

@@ -6,6 +6,7 @@ import { StateForm } from '@/components/StateForm';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { useStateById, useStates, useUpdateState } from '@/hooks/useStateQueries';
 import { extractRequestId } from '@/lib/extractRequestId';
+import { apiErrorMessage } from '@/lib/apiErrorMessage';
 import { closeScreen } from '@/lib/navigation';
 import type { NewState } from '@/interfaces/state';
 
@@ -29,7 +30,7 @@ export default function EditStateScreen() {
     if (!validId) {
       setError('Invalid state.');
     } else if (isError) {
-      setError('Failed to fetch state.', extractRequestId(loadError));
+      setError(apiErrorMessage(loadError, 'Failed to fetch state.'), extractRequestId(loadError));
     } else {
       clearError();
     }
@@ -43,7 +44,8 @@ export default function EditStateScreen() {
       { ...state, ...data },
       {
         onSuccess: () => closeScreen(router),
-        onError: (err) => setError('Failed to update state.', extractRequestId(err)),
+        onError: (err) =>
+          setError(apiErrorMessage(err, 'Failed to update state.'), extractRequestId(err)),
       },
     );
   }
