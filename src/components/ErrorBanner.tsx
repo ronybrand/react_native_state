@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { API_UNAVAILABLE_MESSAGE, START_API_URL } from '@/lib/apiErrorMessage';
 import { colors, spacing } from '@/theme/colors';
 
 interface ErrorBannerProps {
@@ -21,6 +22,15 @@ export function ErrorBanner({ error, requestId }: ErrorBannerProps) {
       style={styles.banner}
     >
       <Text style={styles.message}>{error}</Text>
+      {error === API_UNAVAILABLE_MESSAGE ? (
+        <Pressable
+          accessibilityRole="link"
+          onPress={() => Linking.openURL(START_API_URL)}
+          style={styles.link}
+        >
+          <Text style={styles.linkText}>Turn on the API</Text>
+        </Pressable>
+      ) : null}
       {requestId ? <Text style={styles.reference}>Reference ID: {requestId}</Text> : null}
     </View>
   );
@@ -37,5 +47,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   message: { color: colors.danger, fontSize: 15 },
+  link: { marginTop: spacing.sm, paddingVertical: spacing.xs },
+  linkText: { color: colors.danger, fontSize: 15, textDecorationLine: 'underline' },
   reference: { color: colors.muted, fontSize: 12, marginTop: spacing.xs },
 });
