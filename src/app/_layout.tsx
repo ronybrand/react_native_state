@@ -26,6 +26,7 @@ function RootNavigator() {
     <Stack screenOptions={stackScreenOptions}>
       <Stack.Screen name="index" options={{ title: 'Brazilian States' }} />
       <Stack.Screen name="login" options={{ title: 'Login' }} />
+      <Stack.Screen name="assistant" options={{ title: 'AI assistant' }} />
       <Stack.Screen name="(protected)" options={{ headerShown: false }} />
     </Stack>
   );

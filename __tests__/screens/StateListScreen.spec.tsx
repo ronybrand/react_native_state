@@ -75,6 +75,12 @@ describe('StateListScreen', () => {
     expect(router.push).toHaveBeenCalledWith('/state/new');
   });
 
+  it('opens the AI assistant from the list screen', async () => {
+    await renderWithProviders(<StateListScreen />);
+    await userEvent.setup().press(await screen.findByRole('button', { name: 'Ask AI' }));
+    expect(router.push).toHaveBeenCalledWith('/assistant');
+  });
+
   it('opens the edit screen of the pressed row', async () => {
     await renderWithProviders(<StateListScreen />);
     await userEvent.setup().press(await screen.findByRole('button', { name: 'Edit SP' }));

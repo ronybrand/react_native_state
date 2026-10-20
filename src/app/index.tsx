@@ -89,6 +89,7 @@ export default function StateListScreen() {
     <View style={styles.header}>
       <ErrorBanner error={error} requestId={requestId} />
       <View style={styles.actions}>
+        <AppButton label="Ask AI" variant="primary" onPress={() => router.push('/assistant')} />
         {status === 'authenticated' ? (
           <AppButton label="Log out" variant="neutral" onPress={() => void signOut()} />
         ) : status === 'unauthenticated' ? (
@@ -160,7 +161,12 @@ const styles = StyleSheet.create({
   list: { backgroundColor: colors.background },
   content: { padding: spacing.lg },
   header: { gap: spacing.md, marginBottom: spacing.lg },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    gap: spacing.sm,
+  },
   search: {
     minHeight: 44,
     borderWidth: 1,
