@@ -69,16 +69,14 @@ describe('StateListScreen', () => {
     expect(screen.getByText(`Reference ID: ${requestId}`)).toBeOnTheScreen();
   });
 
-  it('opens the create screen from the "New state" button', async () => {
+  it.each([
+    ['New state', '/state/new'],
+    ['Ask AI', '/assistant'],
+    ['Edit SP', '/state/1/edit'],
+  ])('navigates to %s', async (buttonName, destination) => {
     await renderWithProviders(<StateListScreen />);
-    await userEvent.setup().press(await screen.findByRole('button', { name: 'New state' }));
-    expect(router.push).toHaveBeenCalledWith('/state/new');
-  });
-
-  it('opens the edit screen of the pressed row', async () => {
-    await renderWithProviders(<StateListScreen />);
-    await userEvent.setup().press(await screen.findByRole('button', { name: 'Edit SP' }));
-    expect(router.push).toHaveBeenCalledWith('/state/1/edit');
+    await userEvent.setup().press(await screen.findByRole('button', { name: buttonName }));
+    expect(router.push).toHaveBeenCalledWith(destination);
   });
 
   it('debounces the search by 300ms and sends it as busca', async () => {
