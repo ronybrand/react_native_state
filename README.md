@@ -9,6 +9,8 @@ It consumes the [Estado project](https://github.com/ronybrand/estado)'s REST API
 [react_state](https://github.com/ronybrand/react_state) (Next.js) and
 [vue_state](https://github.com/ronybrand/vue_state) (Vue 3). The domain, the validation rules and
 the API contract are the same; the app itself follows mobile conventions instead of the web ones.
+The public list also includes an AI assistant backed by the
+[estado-ai-agent](https://github.com/ronybrand/estado-ai-agent), which answers using live API data.
 
 ## Screenshots
 
@@ -48,9 +50,11 @@ flowchart LR
     subgraph Device["Device (Expo)"]
         direction LR
         UI["Expo Router screens\n((protected) group guard)"]
+        Assistant["Ask AI screen"]
         Hooks["TanStack Query hooks\n(useStateQueries)"]
         Auth["AuthProvider\n(loading | authenticated |\nunauthenticated)"]
         Services["Services\n(state + mapper, auth, info)"]
+        AIService["aiAgentService\n(55s timeout)"]
         Http["Axios httpClient\n(request id, timeout/retry, 401)"]
         Tokens["tokenStorage\n(keychain + memory)"]
         Secure[("expo-secure-store\n(Keychain / Keystore)")]
@@ -66,10 +70,16 @@ flowchart LR
 
     UI --> Hooks
     UI --> Auth
+    UI --> Assistant
+    Assistant --> AIService
+    AIService --> Http
     Hooks --> Services
     Auth --> Services
     Services --> Http
     Http -- "HTTPS (EXPO_PUBLIC_API_URL)" --> App
+    App -- "POST /ask\n(server-side API key)" --> Agent["estado-ai-agent\n(Spring AI + Gemini)"]
+    Agent -- "live state data tool" --> App
+    Agent --> Gemini["Google Gemini"]
     App --> DB
     Http --> Tokens
     Auth --> Tokens
@@ -78,15 +88,16 @@ flowchart LR
     Lambda -. "starts the instance" .-> EC2
 ```
 
-The app talks straight to the API: a native app has no origin, so there is no BFF proxy. The dashed
-path is the [Turn on the API](#when-the-api-is-turned-off) link, shown only when the API does not
-answer.
+The native app has no browser origin or CORS restriction. Its public demo API URL is the web BFF;
+the backend's `/ask` endpoint keeps the AI credential server-side. The dashed path is the
+[Turn on the API](#when-the-api-is-turned-off) link, shown only when the API does not answer.
 
 ```
 src/
 ├── app/                      # Expo Router: every file is a screen
 │   ├── _layout.tsx           #   providers, splash screen, root Stack
 │   ├── index.tsx             #   list (public)
+│   ├── assistant.tsx         #   public AI assistant (POST /ask through the BFF)
 │   ├── login.tsx
 │   ├── +not-found.tsx
 │   └── (protected)/          #   group: layout redirects to /login without a session
@@ -99,7 +110,7 @@ src/
 ├── hooks/                    # useStateQueries (TanStack Query), useErrorMessage, useDebouncedValue
 ├── lib/                      # httpClient, config (API url), navigation, sessionExpired, formatters
 ├── interfaces/               # State / NewState (zod), BackendInfo
-├── services/                 # stateService + stateApiMapper (wire <-> domain), authService, infoService
+├── services/                 # stateService + mapper, authService, infoService, aiAgentService
 └── theme/                    # colors and spacing shared with the web apps
 
 __tests__/screens/            # screen-level specs (never inside src/app: it is the route tree)
@@ -130,6 +141,11 @@ __mocks__/                    # expo-secure-store (in-memory), expo-router (reco
   the list instead of calling a `back()` that would do nothing.
 - The backend's JSON contract (`sigla`, `nome`, ...) and the `/estado` path are the real wire
   contract and are **not** translated; `stateApiMapper` is the anti-corruption layer.
+- **AI assistant**: the public `assistant.tsx` route sends questions (up to 1,000 characters) to the existing
+  `POST /ask` BFF endpoint. The app contains no Gemini/API secret; the backend owns that credential,
+  calls the agent, and returns answers grounded in live state data. Responses are in English, and
+  the mobile request allows 55s because the BFF can wait up to 50s for the agent. Jest covers the
+  service contract and loading, success, validation, offline and navigation states without contacting Gemini.
 - No async side effects (queues, notifications) exist in this client, so there is nothing to move
   off the request path.
 
@@ -169,7 +185,7 @@ Demo credentials (intentionally public): see the backend's README, also shown on
 ## Scripts
 
 ```bash
-npm test               # Jest (jest-expo) + RNTL, 177 tests
+npm test               # Jest (jest-expo) + RNTL, 216 tests
 npm run test:coverage  # about 97% of lines
 npm run lint           # expo lint
 npm run typecheck      # tsc --noEmit
