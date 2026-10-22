@@ -42,8 +42,20 @@ describe('StateListScreen', () => {
   });
 
   it('shows a loading indicator, then the states', async () => {
+    // Holding the request open keeps the loading state observable, so the
+    // assertion below cannot race the (mocked, microtask-fast) response.
+    let releaseStates!: (states: State[]) => void;
+    jest.mocked(stateService.list).mockReturnValue(
+      new Promise<State[]>((resolve) => {
+        releaseStates = resolve;
+      }),
+    );
+
     await renderWithProviders(<StateListScreen />);
     expect(screen.getByRole('progressbar')).toBeOnTheScreen();
+
+    await act(async () => releaseStates([sp, rj]));
+
     expect(await screen.findByText('Sao Paulo')).toBeOnTheScreen();
     expect(screen.getByText('Rio de Janeiro')).toBeOnTheScreen();
     expect(screen.queryByRole('progressbar')).toBeNull();
